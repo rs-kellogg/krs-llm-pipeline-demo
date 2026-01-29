@@ -5,13 +5,15 @@ from typing import Dict, Any
 def save_result(
     *,
     output_dir: Path,
+    backend: str,
     model: str,
     prompt_id: str,
     prompt: str,
     system: str | None,
     result: Dict[str, Any],
 ):
-    model_dir = output_dir / model
+    # Include backend in the directory structure
+    model_dir = output_dir / backend / model
     model_dir.mkdir(parents=True, exist_ok=True)
 
     path = model_dir / f"{prompt_id}.txt"
@@ -22,6 +24,7 @@ def save_result(
 
     content_lines = [
         f"Result: {prompt_id}",
+        f"Backend: {backend}",
         f"Model: {model}",
         "",
         "Prompt:",

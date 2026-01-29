@@ -1,5 +1,6 @@
 import argparse
 import sys
+import logging
 from pathlib import Path
 
 from .config import load_config
@@ -7,7 +8,18 @@ from .runner import run_model_prompts
 from .backends import get_backend
 
 
+def setup_logger():
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    return logging.getLogger(__name__)
+
+
 def main():
+    logger = setup_logger()
+
     parser = argparse.ArgumentParser(
         description="Run shared prompts across multiple LLM backends."
     )
@@ -58,10 +70,7 @@ def main():
     args = parser.parse_args()
 
     if not args.config.exists():
-        print(
-            f"Config file not found: {args.config}",
-            file=sys.stderr,
-        )
+        logger.error("Config file not found: %s", args.config)
         sys.exit(1)
 
     config = load_config(args.config)
@@ -80,11 +89,9 @@ def main():
             backend_name,
             host=args.server_url,
         )
+        logger.info("Using backend: %s", backend_name)
     except Exception as e:
-        print(
-            f"Failed to initialize backend '{backend_name}': {e}",
-            file=sys.stderr,
-        )
+        logger.error("Failed to initialize backend '%s': %s", backend_name, e)
         sys.exit(1)
 
     # -------------------------
@@ -99,17 +106,14 @@ def main():
     models = config.get("models", [])
 
     if not models:
-        print("No models defined in config.", file=sys.stderr)
+        logger.error("No models defined in config.")
         sys.exit(1)
 
     # -------------------------
     # Run models
     # -------------------------
     for model_cfg in models:
-        if (
-            args.filter_model
-            and args.filter_model not in model_cfg["name"]
-        ):
+        if args.filter_model and args.filter_model not in model_cfg["name"]:
             continue
 
         run_model_prompts(
@@ -118,10 +122,11 @@ def main():
             prompt_registry=prompt_registry,
             stream=stream_mode,
             output_dir=args.output_dir,
+            backend_name=backend_name,
             filter_prompt=args.filter_prompt,
+            logger=logger,
         )
 
 
 if __name__ == "__main__":
     main()
-

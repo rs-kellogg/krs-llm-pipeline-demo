@@ -12,7 +12,9 @@ def run_model_prompts(
     prompt_registry: dict,
     stream: bool,
     output_dir: Path,
+    backend_name: str,
     filter_prompt: str | None = None,
+    logger,
 ):
     model_name = model_cfg["name"]
 
@@ -20,15 +22,12 @@ def run_model_prompts(
     try:
         backend.ensure_model(model_name)
     except Exception as e:
-        print(
-            f"❌ Failed to prepare model '{model_name}': {e}",
-            file=sys.stderr,
-        )
+        logger.error("Failed to prepare model '%s': %s", model_name, e)
         return
 
     prompt_ids = model_cfg.get("prompts", [])
 
-    print(f"\n=== Model: {model_name} ===")
+    logger.info("=== Model: %s ===", model_name)
 
     for prompt_id in prompt_ids:
         if filter_prompt and filter_prompt not in prompt_id:
@@ -37,7 +36,7 @@ def run_model_prompts(
         try:
             pdef = resolve_prompt(prompt_id, prompt_registry)
         except KeyError as e:
-            print(e, file=sys.stderr)
+            logger.error(e)
             continue
 
         # Merge model + prompt configuration
@@ -48,27 +47,27 @@ def run_model_prompts(
             **pdef.get("options", {}),
         }
 
+        logger.info(
+            "Running prompt '%s' on model '%s' with options: %s",
+            prompt_id,
+            model_name,
+            options,
+        )
+
         # Load prompt text(s)
         if "prompt_file" in pdef:
             prompt_file = Path(pdef["prompt_file"])
             if not prompt_file.exists():
-                print(
-                    f"Prompt file not found: {prompt_file}",
-                    file=sys.stderr,
-                )
+                logger.error("Prompt file not found: %s", prompt_file)
                 continue
             prompts = load_prompts_from_file(prompt_file)
         else:
             prompts = [pdef["prompt"]]
 
         for idx, prompt_text in enumerate(prompts, start=1):
-            run_id = (
-                f"{prompt_id}-{idx}"
-                if len(prompts) > 1
-                else prompt_id
-            )
+            run_id = f"{prompt_id}-{idx}" if len(prompts) > 1 else prompt_id
 
-            print(f"\n--- Prompt: {run_id} ---")
+            logger.info("--- Prompt: %s ---", run_id)
 
             try:
                 result = backend.run_prompt(
@@ -80,10 +79,11 @@ def run_model_prompts(
                     stream=stream,
                 )
 
-                print(result["text"])
+                logger.info("Result:\n%s", result["text"])
 
                 save_result(
                     output_dir=output_dir,
+                    backend=backend_name,
                     model=model_name,
                     prompt_id=run_id,
                     prompt=prompt_text,
@@ -92,8 +92,5 @@ def run_model_prompts(
                 )
 
             except Exception as e:
-                print(
-                    f"Error running prompt '{run_id}': {e}",
-                    file=sys.stderr,
-                )
+                logger.error("Error running prompt '%s': %s", run_id, e)
 

@@ -23,6 +23,7 @@ Summarize the MD&A with emphasis on:
 [[models]]
 name = "llama3:8b"
 prompts = ["mda_summary"]
+#[models.options]
 ## Context window size (default: 2048)
 ## Larger values allow the model to consider more prior tokens
 #num_ctx = 4096
