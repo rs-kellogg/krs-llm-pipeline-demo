@@ -4,9 +4,7 @@
 ```
 eval "$('/hpc/software/mamba/24.3.0/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
 source "/hpc/software/mamba/24.3.0/etc/profile.d/mamba.sh"
-mamba create --prefix=./ollama-env python=3.13
-mamba activate ./ollama-env
-python -m pip install ollama
+mamba create --prefix=./llm-pipeline-env python=3.13
 ```
 
 ## Start the Ollama Server

@@ -14,6 +14,7 @@ class HuggingFaceBackend(LLMBackend):
         self,
         device: str | None = None,
         dtype: str | None = None,
+        **_ignored,  # <-- accept unused args like `host`
     ):
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
         self.dtype = dtype
