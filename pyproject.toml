@@ -1,17 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
 [project]
-name = "ollama-runner"
+name = "llm-pipeline"
 version = "0.1.0"
-dependencies = ["ollama"]
+description = "Config-driven LLM pipeline supporting Ollama and Hugging Face backends"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "Kellogg Research Support", email = "rs@kellogg.northwestern.edu" }
+]
 
-[project.scripts]
-ollama-runner = "ollama_runner.cli:main"
-edgar-mda = "ollama_runner.edgar.cli:main"
-
-[project.optional-dependencies]
-test = ["pytest", "pytest-mock"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
+dependencies = [
+  "ollama",
+  "beautifulsoup4",
+]
 
 [project.optional-dependencies]
 hf = [
@@ -19,4 +25,60 @@ hf = [
   "torch",
   "accelerate",
 ]
+
+test = [
+  "pytest",
+  "pytest-mock",
+  "pytest-cov",
+]
+
+dev = [
+  "black",
+  "ruff",
+  "mypy",
+  "pre-commit",
+]
+
+
+[project.scripts]
+llm-pipeline = "llm_pipeline.cli:main"
+edgar-mda = "llm_pipeline.edgar.cli:main"
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+  "integration: tests requiring external services (ollama, HF models, etc.)"
+]
+
+
+[tool.coverage.run]
+source = ["llm_pipeline"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = ["E501"]
+
+
+[tool.black]
+line-length = 88
+target-version = ["py310"]
+
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
 
