@@ -1,0 +1,22 @@
+[project]
+name = "ollama-runner"
+version = "0.1.0"
+dependencies = ["ollama"]
+
+[project.scripts]
+ollama-runner = "ollama_runner.cli:main"
+edgar-mda = "ollama_runner.edgar.cli:main"
+
+[project.optional-dependencies]
+test = ["pytest", "pytest-mock"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[project.optional-dependencies]
+hf = [
+  "transformers>=4.40",
+  "torch",
+  "accelerate",
+]
+
